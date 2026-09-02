@@ -1,0 +1,20 @@
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Node (빌드 도구를 나중에 추가할 경우)
+node_modules/
+dist/
+.cache/
+
+# 로컬 테스트용 샘플 이미지
+samples/
+
+# 로컬 개발 서버 설정 (개인 환경)
+.claude/
