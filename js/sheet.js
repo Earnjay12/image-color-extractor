@@ -103,10 +103,10 @@ CC.sheet = (() => {
       if (graded && c.base && c.base.hex !== c.hex) {
         ctx.fillStyle = c.base.hex;
         ctx.beginPath();
-        ctx.arc(x + 20, cy + 20, 9, 0, Math.PI * 2);
+        ctx.arc(x + 26, cy + 26, 15, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,.85)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255,255,255,.9)';
+        ctx.lineWidth = 2.5;
         ctx.stroke();
         ctx.lineWidth = 1;
       }

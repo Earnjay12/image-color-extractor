@@ -16,12 +16,7 @@
       <span class="brand-mark" aria-hidden="true"></span>
       <span class="brand-name">Color Chip</span>
     </div>
-    <ol class="stepper" id="stepper" aria-label="진행 단계">
-      <li data-step="1" class="active"><span class="num">01</span><span class="lbl">이미지</span></li>
-      <li data-step="2"><span class="num">02</span><span class="lbl">추출 느낌</span></li>
-      <li data-step="3"><span class="num">03</span><span class="lbl">색 보정</span></li>
-      <li data-step="4"><span class="num">04</span><span class="lbl">결과</span></li>
-    </ol>
+    <span class="masthead-note">이미지는 브라우저 안에서만 처리됩니다</span>
   </header>
 
   <!-- ① 이미지 -->
@@ -51,21 +46,6 @@
         <span id="fileMeta" class="file-meta"></span>
         <button id="replaceBtn" class="btn-text" type="button">다른 이미지</button>
       </div>
-
-      <section class="step result" id="step-result">
-        <header class="step-head">
-          <span class="step-num">04</span>
-          <h2>결과</h2>
-          <span class="step-side" id="resultSummary"></span>
-          <button id="downloadBtn" class="btn-primary" type="button" disabled>이미지 + 컬러칩 PNG 저장</button>
-        </header>
-        <p id="status" class="hint" hidden></p>
-        <ul id="palette" class="palette"></ul>
-        <p class="note">
-          코드를 클릭하면 복사됩니다. 보정 후 칩 왼쪽 위 작은 원이 보정 전 색입니다.
-          CMYK는 ICC 프로파일 없이 계산한 근사값입니다.
-        </p>
-      </section>
     </div>
 
     <!-- 오른쪽: ② ③ 컨트롤 -->
@@ -79,12 +59,10 @@
         <div class="pills" id="moodSeg" role="radiogroup" aria-label="추출 느낌"></div>
         <p class="hint" id="moodHint"></p>
 
-        <div class="control">
-          <div class="control-head">
-            <label for="countRange">컬러칩 개수</label>
-            <output id="countOut" for="countRange">5</output>
-          </div>
+        <div class="tweak count">
+          <label for="countRange">컬러칩 개수</label>
           <input type="range" id="countRange" min="2" max="12" value="5" step="1">
+          <output id="countOut" for="countRange">5</output>
         </div>
       </section>
 
@@ -95,7 +73,13 @@
           <button id="tweakReset" class="btn-text step-side" type="button" hidden>미세조정 초기화</button>
         </header>
 
-        <div class="tabs" id="presetTabs" role="tablist" aria-label="보정 종류"></div>
+        <div class="tabs-row">
+          <div class="tabs" id="presetTabs" role="tablist" aria-label="보정 종류"></div>
+          <button id="resetBtn" class="btn-reset" type="button" title="프리셋과 미세조정을 모두 되돌립니다">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.6"/><path d="M3 3v3h3"/></svg>
+            <span>원본</span>
+          </button>
+        </div>
         <div class="pills" id="presetPills" role="radiogroup" aria-label="보정 프리셋"></div>
         <p class="hint" id="gradeHint"></p>
 
@@ -118,7 +102,33 @@
         </div>
       </section>
 
+      <!-- 현재 적용 중인 설정 요약 -->
+      <div class="applied" id="applied" aria-live="polite">
+        <span class="applied-title">현재 적용</span>
+        <dl class="applied-list">
+          <div><dt>추출</dt><dd id="apMood"></dd></div>
+          <div><dt>보정</dt><dd id="apPreset"></dd></div>
+          <div><dt>미세조정</dt><dd id="apTweak"></dd></div>
+        </dl>
+      </div>
+
     </aside>
+
+    <!-- 아래 전체 폭: ④ 결과 -->
+    <section class="step result" id="step-result">
+      <header class="step-head">
+        <span class="step-num">04</span>
+        <h2>결과</h2>
+        <span class="step-side" id="resultSummary"></span>
+        <button id="downloadBtn" class="btn-primary" type="button" disabled>이미지 + 컬러칩 PNG 저장</button>
+      </header>
+      <p id="status" class="hint" hidden></p>
+      <ul id="palette" class="palette"></ul>
+      <p class="note">
+        코드를 클릭하면 복사됩니다. 보정 후 칩 왼쪽 위 원이 보정 전 색입니다.
+        CMYK는 ICC 프로파일 없이 계산한 근사값입니다.
+      </p>
+    </section>
   </section>
 
 </div>

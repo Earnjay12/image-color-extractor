@@ -12,10 +12,12 @@
   const el = {
     intro: $('intro'), dropzone: $('dropzone'), fileInput: $('fileInput'),
     workspace: $('workspace'), previewImg: $('previewImg'), fileMeta: $('fileMeta'),
-    replaceBtn: $('replaceBtn'), stepper: $('stepper'),
+    replaceBtn: $('replaceBtn'),
     moodSeg: $('moodSeg'), moodHint: $('moodHint'),
     countRange: $('countRange'), countOut: $('countOut'),
     presetTabs: $('presetTabs'), presetPills: $('presetPills'), gradeHint: $('gradeHint'),
+    resetBtn: $('resetBtn'),
+    apMood: $('apMood'), apPreset: $('apPreset'), apTweak: $('apTweak'),
     twL: $('twL'), twC: $('twC'), twW: $('twW'),
     twLOut: $('twLOut'), twCOut: $('twCOut'), twWOut: $('twWOut'),
     tweakReset: $('tweakReset'),
@@ -73,7 +75,8 @@
       t.setAttribute('aria-selected', String(t.dataset.id === state.presetGroup));
       t.classList.toggle('has-active', t.dataset.id === activeGroup && activeGroup !== state.presetGroup && state.presetId !== 'none');
     }
-    buildPills(el.presetPills, PRESETS.filter((p) => p.group === state.presetGroup), pickPreset);
+    // '원본' 은 알약이 아니라 탭 옆의 되돌리기 버튼으로 항상 보인다
+    buildPills(el.presetPills, PRESETS.filter((p) => p.group === state.presetGroup && p.id !== 'none'), pickPreset);
     syncPills(el.presetPills, state.presetId);
   }
 
@@ -118,6 +121,26 @@
     let summary = mood.label + ' · ' + (preset.id === 'none' ? '원본' : preset.label);
     if (tweaked) summary += ' + 미세조정';
     el.resultSummary.textContent = summary;
+
+    // 되돌리기 버튼: 이미 원본이면 흐리게
+    el.resetBtn.setAttribute('aria-pressed', String(!graded));
+
+    // 현재 적용 요약
+    el.apMood.textContent = mood.label + ' · ' + state.count + '개';
+    if (preset.id === 'none') {
+      el.apPreset.textContent = '없음';
+      el.apPreset.classList.add('is-none');
+    } else {
+      const group = GROUPS.find((g) => g.id === preset.group);
+      el.apPreset.textContent = group.label + ' · ' + preset.label;
+      el.apPreset.classList.remove('is-none');
+    }
+    const tw = [];
+    if (state.tweak.light) tw.push('밝기 ' + fmtSigned(state.tweak.light));
+    if (state.tweak.sat)   tw.push('채도 ' + fmtSigned(state.tweak.sat));
+    if (state.tweak.warm)  tw.push('온도 ' + fmtSigned(state.tweak.warm));
+    el.apTweak.textContent = tw.length ? tw.join(' · ') : '없음';
+    el.apTweak.classList.toggle('is-none', tw.length === 0);
 
     el.palette.innerHTML = '';
     for (const c of state.colors) el.palette.appendChild(chipCard(c, graded));
@@ -205,14 +228,6 @@
     showToast(message);
   }
 
-  function setStep(n) {
-    for (const li of el.stepper.querySelectorAll('li')) {
-      const s = Number(li.dataset.step);
-      li.classList.toggle('done', s < n);
-      li.classList.toggle('active', s >= n);
-    }
-  }
-
   /* ---------- 이미지 로드 ---------- */
 
   function loadFile(file) {
@@ -232,7 +247,6 @@
       el.fileMeta.textContent = state.fileName + '  ·  ' + img.naturalWidth + ' × ' + img.naturalHeight + 'px';
       el.intro.hidden = true;
       el.workspace.hidden = false;
-      setStep(2);
       el.palette.innerHTML = '';
       el.downloadBtn.disabled = true;
       setStatus('색상을 분석하는 중…');
@@ -316,9 +330,16 @@
   bindTweak(el.twC, 'sat');
   bindTweak(el.twW, 'warm');
 
-  el.tweakReset.addEventListener('click', () => {
+  function resetTweaks() {
     state.tweak = { ...ZERO_TWEAK };
     el.twL.value = 0; el.twC.value = 0; el.twW.value = 0;
+  }
+  el.tweakReset.addEventListener('click', () => { resetTweaks(); recompute(); });
+
+  // 원본으로: 프리셋과 미세조정을 모두 되돌린다 (어느 탭에서든 보인다)
+  el.resetBtn.addEventListener('click', () => {
+    state.presetId = 'none';
+    resetTweaks();
     recompute();
   });
 
