@@ -44,17 +44,33 @@
 
   <section id="workspace" class="workspace" hidden>
 
-    <aside class="stage">
+    <!-- 왼쪽: 사진 + ④ 결과 -->
+    <div class="canvas">
       <div class="stage-frame"><img id="previewImg" alt="업로드한 이미지"></div>
       <div class="stage-meta">
         <span id="fileMeta" class="file-meta"></span>
         <button id="replaceBtn" class="btn-text" type="button">다른 이미지</button>
       </div>
-    </aside>
 
-    <div class="flow">
+      <section class="step result" id="step-result">
+        <header class="step-head">
+          <span class="step-num">04</span>
+          <h2>결과</h2>
+          <span class="step-side" id="resultSummary"></span>
+          <button id="downloadBtn" class="btn-primary" type="button" disabled>이미지 + 컬러칩 PNG 저장</button>
+        </header>
+        <p id="status" class="hint" hidden></p>
+        <ul id="palette" class="palette"></ul>
+        <p class="note">
+          코드를 클릭하면 복사됩니다. 보정 후 칩 왼쪽 위 작은 원이 보정 전 색입니다.
+          CMYK는 ICC 프로파일 없이 계산한 근사값입니다.
+        </p>
+      </section>
+    </div>
 
-      <!-- ② 추출 느낌 -->
+    <!-- 오른쪽: ② ③ 컨트롤 -->
+    <aside class="inspector">
+
       <section class="step" id="step-mood">
         <header class="step-head">
           <span class="step-num">02</span>
@@ -69,63 +85,40 @@
             <output id="countOut" for="countRange">5</output>
           </div>
           <input type="range" id="countRange" min="2" max="12" value="5" step="1">
-          <div class="ticks"><span>2</span><span>12</span></div>
         </div>
       </section>
 
-      <!-- ③ 색 보정 -->
       <section class="step" id="step-grade">
         <header class="step-head">
           <span class="step-num">03</span>
           <h2>색 보정</h2>
+          <button id="tweakReset" class="btn-text step-side" type="button" hidden>미세조정 초기화</button>
         </header>
 
-        <div class="preset-group">
-          <span class="group-label">톤</span>
-          <div class="pills" id="tonePills" role="radiogroup" aria-label="톤 프리셋"></div>
-        </div>
-        <div class="preset-group">
-          <span class="group-label">화풍</span>
-          <div class="pills" id="artPills" role="radiogroup" aria-label="화풍 프리셋"></div>
-        </div>
+        <div class="tabs" id="presetTabs" role="tablist" aria-label="보정 종류"></div>
+        <div class="pills" id="presetPills" role="radiogroup" aria-label="보정 프리셋"></div>
         <p class="hint" id="gradeHint"></p>
 
         <div class="tweaks">
           <div class="tweak">
-            <div class="control-head"><label for="twL">밝기</label><output id="twLOut" for="twL">0</output></div>
+            <label for="twL">밝기</label>
             <input type="range" id="twL" min="-25" max="25" value="0" step="1">
+            <output id="twLOut" for="twL">0</output>
           </div>
           <div class="tweak">
-            <div class="control-head"><label for="twC">채도</label><output id="twCOut" for="twC">0</output></div>
+            <label for="twC">채도</label>
             <input type="range" id="twC" min="-60" max="60" value="0" step="1">
+            <output id="twCOut" for="twC">0</output>
           </div>
           <div class="tweak">
-            <div class="control-head"><label for="twW">온도</label><output id="twWOut" for="twW">0</output></div>
+            <label for="twW">온도</label>
             <input type="range" id="twW" min="-25" max="25" value="0" step="1">
+            <output id="twWOut" for="twW">0</output>
           </div>
-          <button id="tweakReset" class="btn-text" type="button" hidden>미세조정 초기화</button>
         </div>
       </section>
 
-      <!-- ④ 결과 -->
-      <section class="step" id="step-result">
-        <header class="step-head">
-          <span class="step-num">04</span>
-          <h2>결과</h2>
-          <span class="step-side" id="resultSummary"></span>
-        </header>
-
-        <p id="status" class="hint" hidden></p>
-        <ul id="palette" class="palette"></ul>
-
-        <p class="note">
-          코드를 클릭하면 복사됩니다. 보정을 적용하면 칩 왼쪽 위 작은 원이 보정 전 색입니다.
-          CMYK는 ICC 프로파일 없이 계산한 근사값입니다.
-        </p>
-        <button id="downloadBtn" class="btn-primary" type="button" disabled>이미지 + 컬러칩 PNG로 저장</button>
-      </section>
-
-    </div>
+    </aside>
   </section>
 
 </div>

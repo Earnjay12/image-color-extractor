@@ -6,7 +6,7 @@
 (() => {
   const { readableOn } = CC.color;
   const { sample, cluster, select, MOODS } = CC.extract;
-  const { PRESETS, byId, apply, isIdentity, ZERO_TWEAK } = CC.grade;
+  const { GROUPS, PRESETS, byId, apply, isIdentity, ZERO_TWEAK } = CC.grade;
 
   const $ = (id) => document.getElementById(id);
   const el = {
@@ -15,7 +15,7 @@
     replaceBtn: $('replaceBtn'), stepper: $('stepper'),
     moodSeg: $('moodSeg'), moodHint: $('moodHint'),
     countRange: $('countRange'), countOut: $('countOut'),
-    tonePills: $('tonePills'), artPills: $('artPills'), gradeHint: $('gradeHint'),
+    presetTabs: $('presetTabs'), presetPills: $('presetPills'), gradeHint: $('gradeHint'),
     twL: $('twL'), twC: $('twC'), twW: $('twW'),
     twLOut: $('twLOut'), twCOut: $('twCOut'), twWOut: $('twWOut'),
     tweakReset: $('tweakReset'),
@@ -27,13 +27,13 @@
     image: null, objectUrl: null, fileName: '',
     clusters: [],
     moodId: 'balanced', count: 5,
-    presetId: 'none', tweak: { ...ZERO_TWEAK },
+    presetId: 'none', presetGroup: 'tone', tweak: { ...ZERO_TWEAK },
     colors: [],
   };
 
-  /* ---------- 선택 UI 구성 ---------- */
+  /* ---------- 선택 UI ---------- */
 
-  function buildPills(container, items, current, onPick) {
+  function buildPills(container, items, onPick) {
     container.innerHTML = '';
     for (const it of items) {
       const b = document.createElement('button');
@@ -42,7 +42,6 @@
       b.dataset.id = it.id;
       b.textContent = it.label;
       b.setAttribute('role', 'radio');
-      b.setAttribute('aria-checked', String(it.id === current));
       b.addEventListener('click', () => onPick(it.id));
       container.appendChild(b);
     }
@@ -54,20 +53,47 @@
     }
   }
 
-  buildPills(el.moodSeg, MOODS, state.moodId, (id) => { state.moodId = id; recompute(); });
-  buildPills(el.tonePills, PRESETS.filter((p) => p.group === 'tone'), state.presetId, pickPreset);
-  buildPills(el.artPills, PRESETS.filter((p) => p.group === 'art'), state.presetId, pickPreset);
+  function buildTabs() {
+    el.presetTabs.innerHTML = '';
+    for (const g of GROUPS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tab';
+      b.dataset.id = g.id;
+      b.textContent = g.label;
+      b.setAttribute('role', 'tab');
+      b.addEventListener('click', () => { state.presetGroup = g.id; renderPresets(); });
+      el.presetTabs.appendChild(b);
+    }
+  }
 
-  function pickPreset(id) { state.presetId = id; recompute(); }
+  function renderPresets() {
+    const activeGroup = byId(state.presetId).group;
+    for (const t of el.presetTabs.querySelectorAll('.tab')) {
+      t.setAttribute('aria-selected', String(t.dataset.id === state.presetGroup));
+      t.classList.toggle('has-active', t.dataset.id === activeGroup && activeGroup !== state.presetGroup && state.presetId !== 'none');
+    }
+    buildPills(el.presetPills, PRESETS.filter((p) => p.group === state.presetGroup), pickPreset);
+    syncPills(el.presetPills, state.presetId);
+  }
+
+  function pickPreset(id) {
+    state.presetId = id;
+    state.presetGroup = byId(id).group;
+    recompute();
+  }
+
+  buildPills(el.moodSeg, MOODS, (id) => { state.moodId = id; recompute(); });
+  buildTabs();
+  renderPresets();
+  syncPills(el.moodSeg, state.moodId);
 
   /* ---------- 계산 ---------- */
 
   function recompute() {
     if (!state.clusters.length) return;
-
     const base = select(state.clusters, state.moodId, state.count);
     state.colors = base.map((c) => apply(c, state.presetId, state.tweak));
-
     render();
   }
 
@@ -76,20 +102,22 @@
   function render() {
     const mood = MOODS.find((m) => m.id === state.moodId);
     const preset = byId(state.presetId);
+    const tweaked = !!(state.tweak.light || state.tweak.sat || state.tweak.warm);
     const graded = !isIdentity(state.presetId, state.tweak);
 
     syncPills(el.moodSeg, state.moodId);
-    syncPills(el.tonePills, state.presetId);
-    syncPills(el.artPills, state.presetId);
+    renderPresets();
     el.moodHint.textContent = mood.hint;
     el.gradeHint.textContent = preset.hint;
     el.countOut.textContent = state.count;
     el.twLOut.textContent = fmtSigned(state.tweak.light);
     el.twCOut.textContent = fmtSigned(state.tweak.sat);
     el.twWOut.textContent = fmtSigned(state.tweak.warm);
-    el.tweakReset.hidden = !state.tweak.light && !state.tweak.sat && !state.tweak.warm;
+    el.tweakReset.hidden = !tweaked;
 
-    el.resultSummary.textContent = mood.label + ' · ' + (graded ? preset.label + (preset.id === 'none' ? ' + 미세조정' : '') : '원본');
+    let summary = mood.label + ' · ' + (preset.id === 'none' ? '원본' : preset.label);
+    if (tweaked) summary += ' + 미세조정';
+    el.resultSummary.textContent = summary;
 
     el.palette.innerHTML = '';
     for (const c of state.colors) el.palette.appendChild(chipCard(c, graded));
@@ -127,8 +155,8 @@
     codes.className = 'chip-codes';
     codes.append(
       codeRow('HEX', c.hex, c.hex, true),
-      codeRow('RGB', c.r + '  ' + c.g + '  ' + c.b, 'rgb(' + c.r + ', ' + c.g + ', ' + c.b + ')'),
-      codeRow('CMYK', c.cmyk.join('  '), c.cmyk.join(', ')),
+      codeRow('RGB', c.r + ' ' + c.g + ' ' + c.b, 'rgb(' + c.r + ', ' + c.g + ', ' + c.b + ')'),
+      codeRow('CMYK', c.cmyk.join(' '), c.cmyk.join(', ')),
     );
 
     li.append(sw, codes);
@@ -226,13 +254,15 @@
 
   function download() {
     if (!state.image || !state.colors.length) return;
+    const graded = !isIdentity(state.presetId, state.tweak);
+    const preset = byId(state.presetId);
     const cv = CC.sheet.build({
       image: state.image,
       fileName: state.fileName,
       colors: state.colors,
       moodLabel: MOODS.find((m) => m.id === state.moodId).label,
-      gradeLabel: isIdentity(state.presetId, state.tweak) ? '원본' : byId(state.presetId).label,
-      graded: !isIdentity(state.presetId, state.tweak),
+      gradeLabel: !graded ? '원본' : (preset.id === 'none' ? '미세조정' : preset.label),
+      graded,
     });
     const base = state.fileName.replace(/\.[^.]+$/, '') || 'image';
     cv.toBlob((blob) => {
@@ -295,5 +325,5 @@
   el.downloadBtn.addEventListener('click', download);
 
   // 테스트·디버깅용 노출
-  window.ColorChip = { state, loadFile, recompute };
+  window.ColorChip = { state, loadFile, recompute, renderPresets };
 })();
